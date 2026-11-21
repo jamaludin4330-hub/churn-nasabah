@@ -1,0 +1,331 @@
+{
+  "feature_order": [
+    "Customer_Age",
+    "Gender",
+    "Dependent_count",
+    "Education_Level",
+    "Marital_Status",
+    "Income_Category",
+    "Card_Category",
+    "Months_on_book",
+    "Total_Relationship_Count",
+    "Months_Inactive_12_mon",
+    "Contacts_Count_12_mon",
+    "Credit_Limit",
+    "Total_Revolving_Bal",
+    "Avg_Open_To_Buy",
+    "Total_Amt_Chng_Q4_Q1",
+    "Total_Trans_Amt",
+    "Total_Trans_Ct",
+    "Total_Ct_Chng_Q4_Q1",
+    "Avg_Utilization_Ratio"
+  ],
+  "cat_cols": {
+    "Gender": [
+      "F",
+      "M"
+    ],
+    "Education_Level": [
+      "College",
+      "Doctorate",
+      "Graduate",
+      "High School",
+      "Post-Graduate",
+      "Uneducated",
+      "Unknown"
+    ],
+    "Marital_Status": [
+      "Divorced",
+      "Married",
+      "Single",
+      "Unknown"
+    ],
+    "Income_Category": [
+      "$120K +",
+      "$40K - $60K",
+      "$60K - $80K",
+      "$80K - $120K",
+      "Less than $40K",
+      "Unknown"
+    ],
+    "Card_Category": [
+      "Blue",
+      "Gold",
+      "Platinum",
+      "Silver"
+    ]
+  },
+  "num_cols": {
+    "Customer_Age": {
+      "min": 26.0,
+      "max": 73.0,
+      "median": 46.0
+    },
+    "Dependent_count": {
+      "min": 0.0,
+      "max": 5.0,
+      "median": 2.0
+    },
+    "Months_on_book": {
+      "min": 13.0,
+      "max": 56.0,
+      "median": 36.0
+    },
+    "Total_Relationship_Count": {
+      "min": 1.0,
+      "max": 6.0,
+      "median": 4.0
+    },
+    "Months_Inactive_12_mon": {
+      "min": 0.0,
+      "max": 6.0,
+      "median": 2.0
+    },
+    "Contacts_Count_12_mon": {
+      "min": 0.0,
+      "max": 6.0,
+      "median": 2.0
+    },
+    "Credit_Limit": {
+      "min": 1438.3,
+      "max": 34516.0,
+      "median": 4549.0
+    },
+    "Total_Revolving_Bal": {
+      "min": 0.0,
+      "max": 2517.0,
+      "median": 1276.0
+    },
+    "Avg_Open_To_Buy": {
+      "min": 3.0,
+      "max": 34516.0,
+      "median": 3474.0
+    },
+    "Total_Amt_Chng_Q4_Q1": {
+      "min": 0.0,
+      "max": 3.397,
+      "median": 0.736
+    },
+    "Total_Trans_Amt": {
+      "min": 510.0,
+      "max": 18484.0,
+      "median": 3899.0
+    },
+    "Total_Trans_Ct": {
+      "min": 10.0,
+      "max": 139.0,
+      "median": 67.0
+    },
+    "Total_Ct_Chng_Q4_Q1": {
+      "min": 0.0,
+      "max": 3.714,
+      "median": 0.702
+    },
+    "Avg_Utilization_Ratio": {
+      "min": 0.0,
+      "max": 0.999,
+      "median": 0.176
+    }
+  },
+  "n_data": 10127,
+  "n_fitur": 19,
+  "imbalance": {
+    "aktif": 8500,
+    "churn": 1627
+  },
+  "best": {
+    "n_estimators": 50,
+    "max_depth": "Unlimited"
+  },
+  "metrics": {
+    "accuracy": 0.9565646594274433,
+    "roc_auc": 0.9830570252792475,
+    "report": {
+      "Aktif": {
+        "precision": 0.9708114419147694,
+        "recall": 0.9776601998824221,
+        "f1-score": 0.974223784417106,
+        "support": 1701.0
+      },
+      "Churn": {
+        "precision": 0.8785942492012779,
+        "recall": 0.8461538461538461,
+        "f1-score": 0.8620689655172413,
+        "support": 325.0
+      },
+      "accuracy": 0.9565646594274433,
+      "macro avg": {
+        "precision": 0.9247028455580237,
+        "recall": 0.9119070230181341,
+        "f1-score": 0.9181463749671737,
+        "support": 2026.0
+      },
+      "weighted avg": {
+        "precision": 0.9560184569039676,
+        "recall": 0.9565646594274433,
+        "f1-score": 0.9562325128759136,
+        "support": 2026.0
+      }
+    }
+  },
+  "confusion_matrix": [
+    [
+      1663,
+      38
+    ],
+    [
+      50,
+      275
+    ]
+  ],
+  "scenario_a": [
+    {
+      "n_estimators": 10,
+      "acc_train": 0.9972,
+      "acc_test": 0.9418,
+      "f1_churn": 0.8127
+    },
+    {
+      "n_estimators": 50,
+      "acc_train": 0.9986,
+      "acc_test": 0.9566,
+      "f1_churn": 0.8621
+    },
+    {
+      "n_estimators": 100,
+      "acc_train": 0.9988,
+      "acc_test": 0.9541,
+      "f1_churn": 0.8554
+    },
+    {
+      "n_estimators": 200,
+      "acc_train": 0.999,
+      "acc_test": 0.9526,
+      "f1_churn": 0.85
+    },
+    {
+      "n_estimators": 500,
+      "acc_train": 0.9993,
+      "acc_test": 0.9521,
+      "f1_churn": 0.8496
+    }
+  ],
+  "scenario_b": [
+    {
+      "max_depth": "Unlimited",
+      "acc_train": 0.9986,
+      "acc_test": 0.9566,
+      "selisih": 0.0421
+    },
+    {
+      "max_depth": "3",
+      "acc_train": 0.8369,
+      "acc_test": 0.8391,
+      "selisih": -0.0022
+    },
+    {
+      "max_depth": "5",
+      "acc_train": 0.8983,
+      "acc_test": 0.8949,
+      "selisih": 0.0034
+    },
+    {
+      "max_depth": "10",
+      "acc_train": 0.9774,
+      "acc_test": 0.9452,
+      "selisih": 0.0322
+    },
+    {
+      "max_depth": "20",
+      "acc_train": 0.9981,
+      "acc_test": 0.9551,
+      "selisih": 0.0431
+    }
+  ],
+  "importance_top10": [
+    {
+      "Feature": "Total_Trans_Amt",
+      "Importance": 0.2072
+    },
+    {
+      "Feature": "Total_Trans_Ct",
+      "Importance": 0.2014
+    },
+    {
+      "Feature": "Total_Revolving_Bal",
+      "Importance": 0.1002
+    },
+    {
+      "Feature": "Total_Ct_Chng_Q4_Q1",
+      "Importance": 0.0898
+    },
+    {
+      "Feature": "Avg_Utilization_Ratio",
+      "Importance": 0.0651
+    },
+    {
+      "Feature": "Total_Amt_Chng_Q4_Q1",
+      "Importance": 0.0575
+    },
+    {
+      "Feature": "Total_Relationship_Count",
+      "Importance": 0.0487
+    },
+    {
+      "Feature": "Months_Inactive_12_mon",
+      "Importance": 0.0332
+    },
+    {
+      "Feature": "Avg_Open_To_Buy",
+      "Importance": 0.0284
+    },
+    {
+      "Feature": "Credit_Limit",
+      "Importance": 0.028
+    }
+  ],
+  "contoh": {
+    "berisiko": {
+      "Customer_Age": 50,
+      "Gender": "F",
+      "Dependent_count": 1,
+      "Education_Level": "Post-Graduate",
+      "Marital_Status": "Married",
+      "Income_Category": "$40K - $60K",
+      "Card_Category": "Blue",
+      "Months_on_book": 41,
+      "Total_Relationship_Count": 6,
+      "Months_Inactive_12_mon": 3,
+      "Contacts_Count_12_mon": 3,
+      "Credit_Limit": 1694.0,
+      "Total_Revolving_Bal": 479,
+      "Avg_Open_To_Buy": 1215.0,
+      "Total_Amt_Chng_Q4_Q1": 0.838,
+      "Total_Trans_Amt": 2349,
+      "Total_Trans_Ct": 42,
+      "Total_Ct_Chng_Q4_Q1": 0.312,
+      "Avg_Utilization_Ratio": 0.283
+    },
+    "aman": {
+      "Customer_Age": 51,
+      "Gender": "F",
+      "Dependent_count": 3,
+      "Education_Level": "Graduate",
+      "Marital_Status": "Single",
+      "Income_Category": "Less than $40K",
+      "Card_Category": "Blue",
+      "Months_on_book": 41,
+      "Total_Relationship_Count": 6,
+      "Months_Inactive_12_mon": 2,
+      "Contacts_Count_12_mon": 3,
+      "Credit_Limit": 1519.0,
+      "Total_Revolving_Bal": 1148,
+      "Avg_Open_To_Buy": 371.0,
+      "Total_Amt_Chng_Q4_Q1": 0.767,
+      "Total_Trans_Amt": 4927,
+      "Total_Trans_Ct": 73,
+      "Total_Ct_Chng_Q4_Q1": 0.738,
+      "Avg_Utilization_Ratio": 0.756
+    }
+  }
+}

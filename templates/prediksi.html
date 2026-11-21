@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prediksi - Churn Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-in">
+      <a href="{{ url_for('index') }}" class="brand"><span class="brand-mark"></span>Churn Watch</a>
+      <button class="nav-toggle" type="button">Menu</button>
+      <nav class="nav-links">
+        <a href="{{ url_for('index') }}">Beranda</a>
+        <a href="{{ url_for('prediksi') }}" class="active">Prediksi</a>
+        <a href="{{ url_for('eksperimen') }}">Eksperimen</a>
+        <a href="{{ url_for('tentang') }}">Tentang</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-head">
+      <h1>Prediksi churn nasabah</h1>
+      <p>Isi tiga langkah di bawah, lalu klik Prediksi Sekarang. Pakai tombol contoh kalau mau coba cepat.</p>
+    </div>
+
+    <div class="pred-layout">
+      <div class="panel-card">
+        <div class="preset-bar">
+          <span>Contoh data:</span>
+          <button type="button" class="btn btn-ghost btn-sm" data-preset="aman">Nasabah aman</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-preset="berisiko">Nasabah berisiko</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-preset="reset">Reset</button>
+        </div>
+
+        <div class="steps">
+          {% for g in grup %}
+          <button type="button" class="step-item"><i>{{ loop.index }}</i><span>{{ g.judul }}</span></button>
+          {% endfor %}
+        </div>
+        <div class="progress"><div id="progress-bar"></div></div>
+
+        <form id="form-churn" onsubmit="return false;">
+          {% for g in grup %}
+          <section class="panel">
+            <h3>{{ g.judul }}</h3>
+            <div class="grid-fields">
+              {% for it in g["item"] %}
+              <div class="field">
+                <label for="{{ it.name }}">{{ it.label }}
+                  <button type="button" class="info-btn" data-target="info-{{ it.name }}">?</button></label>
+                {% if it.tipe == "kat" %}
+                <select id="{{ it.name }}" name="{{ it.name }}">
+                  {% for o in it.opsi %}<option value="{{ o }}">{{ o }}</option>{% endfor %}
+                </select>
+                {% else %}
+                <div class="range-row">
+                  <input type="range" id="{{ it.name }}" name="{{ it.name }}"
+                         min="{{ it.min }}" max="{{ it.max }}" step="{{ it.step }}"
+                         value="{{ it.nilai }}" data-max="{{ it.max }}" data-default="{{ it.nilai }}">
+                  <output id="out-{{ it.name }}"></output>
+                </div>
+                {% endif %}
+                <p class="info-text hidden" id="info-{{ it.name }}">{{ it.info }}</p>
+                {% if it.hint %}<small>{{ it.hint }}</small>{% endif %}
+              </div>
+              {% endfor %}
+              {% if g.id == "kartu" %}
+              <div class="derived">
+                <div><small>Sisa limit (dihitung otomatis)</small><b id="t-sisa">0</b></div>
+                <div><small>Rasio penggunaan kartu (otomatis)</small><b id="t-rasio">0%</b></div>
+              </div>
+              {% endif %}
+            </div>
+          </section>
+          {% endfor %}
+
+          <div class="form-nav">
+            <button type="button" id="btn-back" class="btn btn-ghost">Kembali</button>
+            <button type="button" id="btn-next" class="btn btn-primary">Selanjutnya</button>
+            <button type="button" id="btn-predict" class="btn btn-primary hidden">Prediksi Sekarang</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="panel-card hasil">
+        <h3 style="margin-bottom:14px">Hasil prediksi</h3>
+        <div id="hasil-kosong" class="hasil-kosong">
+          <div class="ring"></div>
+          <p>Belum ada hasil. Lengkapi data lalu klik Prediksi Sekarang.</p>
+        </div>
+        <div id="hasil-isi" class="hidden">
+          <div class="gauge">
+            <svg viewBox="0 0 200 118">
+              <defs>
+                <linearGradient id="gg" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0" stop-color="#34d399"/><stop offset=".55" stop-color="#fbbf24"/><stop offset="1" stop-color="#fb7185"/>
+                </linearGradient>
+              </defs>
+              <path class="g-track" d="M20 100 A80 80 0 0 1 180 100"/>
+              <path id="g-val" class="g-val" d="M20 100 A80 80 0 0 1 180 100"/>
+            </svg>
+            <div class="g-text"><b id="g-persen">0%</b><span>probabilitas churn</span></div>
+          </div>
+          <div style="text-align:center">
+            <span id="badge" class="badge">Risiko</span>
+            <h3 id="teks-hasil"></h3>
+            <p id="saran" class="saran"></p>
+            <p id="arti" class="arti"></p>
+          </div>
+          <div id="alasan-box" class="alasan">
+            <h4>Indikator bantu dari data yang dimasukkan</h4>
+            <ul id="alasan-list"></ul>
+          </div>
+        </div>
+        <div id="galat" class="galat hidden"></div>
+
+        <div id="riwayat" class="riwayat hidden">
+          <div class="riwayat-head"><span>Riwayat prediksi</span>
+            <button type="button" id="hapus-riwayat" class="btn btn-ghost btn-sm">Hapus</button></div>
+          <ul id="list-riwayat"></ul>
+        </div>
+        <div class="disc">
+          Hasil ini adalah estimasi dari data historis dan bukan keputusan final. Skor 30% ke bawah dianggap rendah, 30% sampai 60% sedang, dan 60% ke atas tinggi.
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>Selsa Shafana Alfiyani - 301240041 - Teknik Informatika  - TA-06 Pembelajaran Mesin</footer>
+  <script>const CONTOH = {{ contoh|tojson }};</script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/prediksi.js') }}"></script>
+</body>
+</html>

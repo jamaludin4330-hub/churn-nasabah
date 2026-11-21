@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tentang - Churn Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-in">
+      <a href="{{ url_for('index') }}" class="brand"><span class="brand-mark"></span>Churn Watch</a>
+      <button class="nav-toggle" type="button">Menu</button>
+      <nav class="nav-links">
+        <a href="{{ url_for('index') }}">Beranda</a>
+        <a href="{{ url_for('prediksi') }}">Prediksi</a>
+        <a href="{{ url_for('eksperimen') }}">Eksperimen</a>
+        <a href="{{ url_for('tentang') }}" class="active">Tentang</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding-bottom:64px">
+    <div class="page-head">
+      <h1>Tentang proyek ini</h1>
+      <p>Penjelasan masalah, data, algoritma, dan cara membaca hasil prediksi.</p>
+    </div>
+
+    <section class="panel-card reveal" style="margin-bottom:16px">
+      <h2 class="sub">Latar belakang</h2>
+      <p class="isi">Churn adalah kondisi ketika nasabah berhenti memakai layanan bank, misalnya menutup atau tidak lagi memakai kartu kredit. Mencari nasabah baru biasanya lebih mahal daripada mempertahankan nasabah lama, jadi bank perlu tahu lebih awal nasabah mana yang berisiko pergi. Proyek ini memakai algoritma Random Forest untuk memperkirakan risiko tersebut dari data profil dan aktivitas transaksi nasabah.</p>
+    </section>
+
+    <section class="panel-card reveal" style="margin-bottom:16px">
+      <h2 class="sub">Dataset</h2>
+      <p class="isi">Data yang dipakai adalah Credit Card Customers dari Kaggle (sakshigoyal7). Kolom CLIENTNUM dibuang karena hanya ID, dan dua kolom Naive_Bayes dibuang karena bukan fitur asli. Kolom Attrition_Flag diubah jadi target Churn (1 = berhenti, 0 = aktif).</p>
+      <div class="chips" style="margin-top:16px">
+        <div class="chip-info"><small>Jumlah data</small><b>{{ "{:,}".format(meta.n_data) }}</b></div>
+        <div class="chip-info"><small>Jumlah fitur</small><b>{{ meta.n_fitur }}</b></div>
+        <div class="chip-info"><small>Nasabah churn</small><b>{{ "{:,}".format(meta.imbalance.churn) }} ({{ "%.1f"|format(meta.imbalance.churn / meta.n_data * 100) }}%)</b></div>
+        <div class="chip-info"><small>Nasabah aktif</small><b>{{ "{:,}".format(meta.imbalance.aktif) }}</b></div>
+      </div>
+      <p class="isi">Karena kelas churn jauh lebih sedikit, model dilatih dengan <code>class_weight="balanced"</code> supaya kelas churn tidak diabaikan.</p>
+
+      <h3 class="sub2">Kamus fitur</h3>
+      <div class="tabel-wrap"><table class="kamus">
+        <tr><th>Fitur</th><th>Kolom di data</th><th>Arti</th></tr>
+        {% for k in kamus %}
+        <tr><td>{{ k.label }}</td><td>{{ k.kode }}</td><td>{{ k.arti }}</td></tr>
+        {% endfor %}
+      </table></div>
+    </section>
+
+    <section class="panel-card reveal" style="margin-bottom:16px">
+      <h2 class="sub">Random Forest dalam singkat</h2>
+      <p class="isi">Random Forest adalah kumpulan banyak pohon keputusan yang dilatih dengan data dan fitur yang sedikit berbeda, lalu hasilnya digabung. Satu pohon mudah salah dan mudah menghafal data latih (overfitting), tapi banyak pohon yang digabung biasanya jauh lebih stabil.</p>
+      <div class="tiga">
+        <div class="mini"><b>1. Bootstrap</b><p>Tiap pohon dilatih dari sampel data yang diambil acak dengan pengembalian.</p></div>
+        <div class="mini"><b>2. Fitur acak</b><p>Di setiap percabangan, pohon hanya memilih dari sebagian fitur yang diambil acak.</p></div>
+        <div class="mini"><b>3. Voting</b><p>Untuk klasifikasi, hasil akhir ditentukan dari suara terbanyak seluruh pohon.</p></div>
+      </div>
+      <div class="dua-kolom" style="margin-top:16px">
+        <div class="mini"><b>Kelebihan</b><p>Akurasi biasanya tinggi, lebih tahan overfitting dibanding satu pohon, bisa menangani banyak fitur, dan memberi nilai feature importance.</p></div>
+        <div class="mini"><b>Kekurangan</b><p>Lebih sulit dijelaskan dibanding satu pohon, memakai lebih banyak memori, dan prediksi melambat kalau pohonnya sangat banyak.</p></div>
+      </div>
+    </section>
+
+    <section class="panel-card reveal" style="margin-bottom:16px">
+      <h2 class="sub">Alur pengerjaan</h2>
+      <ol class="alur">
+        <li><b>Persiapan data.</b> Membersihkan kolom, membuat target Churn, dan mengecek ketidakseimbangan kelas.</li>
+        <li><b>Pembagian data.</b> 80% untuk latih dan 20% untuk uji, dengan proporsi churn yang dijaga sama.</li>
+        <li><b>Encoding.</b> Kolom kategori diubah ke angka dengan One-Hot Encoding.</li>
+        <li><b>Skenario A.</b> Menguji jumlah pohon 10, 50, 100, 200, dan 500.</li>
+        <li><b>Skenario B.</b> Menguji kedalaman pohon None, 3, 5, 10, dan 20 memakai jumlah pohon terbaik.</li>
+        <li><b>Model terbaik.</b> Kombinasi terbaik ({{ meta.best.n_estimators }} pohon, max_depth {{ meta.best.max_depth }}) dievaluasi dan disimpan untuk web ini.</li>
+      </ol>
+    </section>
+
+    <section class="panel-card reveal" style="margin-bottom:16px">
+      <h2 class="sub">Cara membaca hasil prediksi</h2>
+      <p class="isi">Angka yang muncul adalah skor risiko dari model, yaitu seberapa mirip nasabah tersebut dengan nasabah yang berhenti di data latih. Skor ini bukan kepastian dan bukan persentase kejadian yang sebenarnya.</p>
+      <div class="tabel-wrap"><table>
+        <tr><th>Skor</th><th>Tingkat risiko</th><th>Tindakan yang disarankan</th></tr>
+        <tr><td>di bawah 30%</td><td>Rendah</td><td>Pertahankan layanan rutin</td></tr>
+        <tr><td>30% sampai 60%</td><td>Sedang</td><td>Pantau aktivitas dan tawarkan program loyalitas</td></tr>
+        <tr><td>60% ke atas</td><td>Tinggi</td><td>Hubungi nasabah dan tawarkan layanan khusus</td></tr>
+      </table></div>
+    </section>
+
+    <section class="panel-card reveal" style="margin-bottom:16px">
+      <h2 class="sub">Pertanyaan yang sering muncul</h2>
+      <div class="faq">
+        <details><summary>Bagaimana cara memakai halaman Prediksi?</summary><p>Isi tiga langkah (profil, kartu, transaksi), lalu klik Prediksi Sekarang. Tombol contoh data bisa dipakai untuk mencoba cepat, dan tombol tanda tanya menjelaskan arti tiap isian.</p></details>
+        <details><summary>Apakah web ini melatih model setiap kali dibuka?</summary><p>Tidak. Model dilatih sekali di notebook, disimpan ke file, lalu web hanya memuat dan memakainya.</p></details>
+        <details><summary>Kenapa ada dua isian yang dihitung otomatis?</summary><p>Sisa limit dan rasio penggunaan kartu bisa dihitung dari limit dan saldo revolving, jadi pengguna tidak perlu mengisinya lagi.</p></details>
+        <details><summary>Apakah hasilnya pasti benar?</summary><p>Tidak. Hasilnya adalah estimasi dari data historis. Model tetap bisa salah, jadi gunakan sebagai bahan pertimbangan, bukan keputusan akhir.</p></details>
+        <details><summary>Dari mana "alasan" pada hasil prediksi berasal?</summary><p>Itu indikator bantu berupa aturan sederhana yang membandingkan input dengan kebiasaan nasabah pada umumnya. Itu bukan penjelasan internal dari model Random Forest.</p></details>
+      </div>
+    </section>
+
+    <section class="panel-card reveal">
+      <h2 class="sub">Batasan</h2>
+      <p class="isi">Data berasal dari satu dataset publik dan belum tentu mewakili nasabah bank mana pun di dunia nyata. Kelas churn jauh lebih sedikit dari kelas aktif, dan model belum diuji pada data baru di luar dataset ini.</p>
+    </section>
+  </main>
+
+  <footer>Selsa Shafana Alfiyani - 301240041 - Teknik Informatika  - TA-06 Pembelajaran Mesin</footer>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

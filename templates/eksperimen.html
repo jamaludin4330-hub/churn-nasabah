@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eksperimen - Churn Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-in">
+      <a href="{{ url_for('index') }}" class="brand"><span class="brand-mark"></span>Churn Watch</a>
+      <button class="nav-toggle" type="button">Menu</button>
+      <nav class="nav-links">
+        <a href="{{ url_for('index') }}">Beranda</a>
+        <a href="{{ url_for('prediksi') }}">Prediksi</a>
+        <a href="{{ url_for('eksperimen') }}" class="active">Eksperimen</a>
+        <a href="{{ url_for('tentang') }}">Tentang</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding-bottom:64px">
+    <div class="page-head">
+      <h1>Hasil eksperimen Random Forest</h1>
+      <p>Pengaruh jumlah pohon dan kedalaman pohon, fitur penting, serta evaluasi model terbaik.</p>
+    </div>
+
+    <div class="chips">
+      <div class="chip-info"><small>n_estimators terbaik</small><b>{{ meta.best.n_estimators }}</b></div>
+      <div class="chip-info"><small>max_depth terbaik</small><b>{{ meta.best.max_depth }}</b></div>
+      <div class="chip-info"><small>Akurasi uji</small><b>{{ "%.2f"|format(meta.metrics.accuracy * 100) }}%</b></div>
+      <div class="chip-info"><small>ROC AUC</small><b>{{ "%.3f"|format(meta.metrics.roc_auc) }}</b></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="a">Skenario A</button>
+      <button class="tab-btn" data-tab="b">Skenario B</button>
+      <button class="tab-btn" data-tab="fi">Feature Importance</button>
+      <button class="tab-btn" data-tab="ev">Evaluasi</button>
+    </div>
+
+    <section id="tab-a" class="tab-panel active panel-card">
+      <h3 style="margin-bottom:6px">Skenario A: jumlah pohon (n_estimators)</h3>
+      <p class="note" style="margin:0 0 16px">Akurasi testing dan F1-score kelas churn untuk tiap jumlah pohon.</p>
+      <div class="chart-box"><canvas id="chart-a"></canvas></div>
+      <div class="tabel-wrap"><table>
+        <tr><th>n_estimators</th><th>Akurasi Training</th><th>Akurasi Testing</th><th>F1 Churn</th></tr>
+        {% for r in meta.scenario_a %}
+        <tr class="{{ 'best' if r['n_estimators'] == meta.best.n_estimators }}">
+          <td>{{ r["n_estimators"] }}</td><td>{{ "%.4f"|format(r["acc_train"]) }}</td>
+          <td>{{ "%.4f"|format(r["acc_test"]) }}</td><td>{{ "%.4f"|format(r["f1_churn"]) }}</td>
+        </tr>
+        {% endfor %}
+      </table></div>
+      <div class="analisis">
+        <h4>Analisis</h4>
+        <p>{{ analisis.a }}</p>
+        {% if catatan.a %}<p class="catatan">{{ catatan.a }}</p>{% endif %}
+      </div>
+    </section>
+
+    <section id="tab-b" class="tab-panel panel-card">
+      <h3 style="margin-bottom:6px">Skenario B: kedalaman pohon (max_depth)</h3>
+      <p class="note" style="margin:0 0 16px">Perbandingan akurasi training dan testing. Selisih besar menandakan overfitting.</p>
+      <div class="chart-box"><canvas id="chart-b"></canvas></div>
+      <div class="tabel-wrap"><table>
+        <tr><th>max_depth</th><th>Akurasi Training</th><th>Akurasi Testing</th><th>Selisih</th></tr>
+        {% for r in meta.scenario_b %}
+        <tr class="{{ 'best' if r['max_depth'] == meta.best.max_depth }}">
+          <td>{{ r["max_depth"] }}</td><td>{{ "%.4f"|format(r["acc_train"]) }}</td>
+          <td>{{ "%.4f"|format(r["acc_test"]) }}</td><td>{{ "%.4f"|format(r["selisih"]) }}</td>
+        </tr>
+        {% endfor %}
+      </table></div>
+      <div class="analisis">
+        <h4>Analisis</h4>
+        <p>{{ analisis.b }}</p>
+        {% if catatan.b %}<p class="catatan">{{ catatan.b }}</p>{% endif %}
+      </div>
+    </section>
+
+    <section id="tab-fi" class="tab-panel panel-card">
+      <h3 style="margin-bottom:6px">10 fitur terpenting</h3>
+      <p class="note" style="margin:0 0 16px">Diambil dari feature_importances_ pada model terbaik (setelah One-Hot Encoding).</p>
+      <div class="chart-box" style="height:420px"><canvas id="chart-fi"></canvas></div>
+      <div class="analisis">
+        <h4>Analisis</h4>
+        <p>{{ analisis.fi }}</p>
+        {% if catatan.fi %}<p class="catatan">{{ catatan.fi }}</p>{% endif %}
+      </div>
+    </section>
+
+    <section id="tab-ev" class="tab-panel">
+      <div class="dua-kolom">
+        <div class="panel-card">
+          <h3 style="margin-bottom:14px">Classification report</h3>
+          <div class="tabel-wrap"><table>
+            <tr><th>Kelas</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr>
+            {% for k in ["Aktif", "Churn", "macro avg", "weighted avg"] %}
+            {% set r = meta.metrics.report[k] %}
+            <tr><td>{{ k }}</td><td>{{ "%.2f"|format(r["precision"]) }}</td><td>{{ "%.2f"|format(r["recall"]) }}</td>
+              <td>{{ "%.2f"|format(r["f1-score"]) }}</td><td>{{ "%d"|format(r["support"]) }}</td></tr>
+            {% endfor %}
+          </table></div>
+        </div>
+        <div class="panel-card">
+          <h3 style="margin-bottom:14px">Confusion matrix</h3>
+          {% set cm = meta.confusion_matrix %}
+          <div class="cm">
+            <div class="lbl"></div><div class="lbl">Prediksi Aktif</div><div class="lbl">Prediksi Churn</div>
+            <div class="lbl">Asli Aktif</div>
+            <div class="benar">{{ cm[0][0] }}<small>benar</small></div>
+            <div class="salah">{{ cm[0][1] }}<small>salah</small></div>
+            <div class="lbl">Asli Churn</div>
+            <div class="salah">{{ cm[1][0] }}<small>salah</small></div>
+            <div class="benar">{{ cm[1][1] }}<small>benar</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-card" style="margin-top:16px">
+        <h3 style="margin-bottom:6px">Distribusi kelas target</h3>
+        <p class="note" style="margin:0 0 12px">Kelas churn jauh lebih sedikit dari kelas aktif, sehingga model dilatih dengan class_weight balanced.</p>
+        <div class="chart-box" style="height:260px"><canvas id="chart-im"></canvas></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Selsa Shafana Alfiyani - 301240041 - Teknik Informatika  - TA-06 Pembelajaran Mesin</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>
+    const DATA = {{ meta|tojson }};
+    Chart.defaults.color = "#93a0c6";
+    Chart.defaults.borderColor = "rgba(130,150,210,.15)";
+    Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+    const W = { teal: "#2dd4bf", indigo: "#818cf8", rose: "#fb7185", amber: "#fbbf24" };
+
+    function garis(label, data, warna) {
+      return { label: label, data: data, borderColor: warna, backgroundColor: warna,
+               tension: 0.3, pointRadius: 5, pointHoverRadius: 8, borderWidth: 3 };
+    }
+    function sumbu(judul) { return { title: { display: true, text: judul } }; }
+
+    const pembuat = {
+      a() {
+        const d = DATA.scenario_a;
+        new Chart(document.getElementById("chart-a"), {
+          type: "line",
+          data: { labels: d.map((r) => r.n_estimators),
+                  datasets: [garis("Akurasi Testing", d.map((r) => r.acc_test), W.teal),
+                             garis("F1-score Churn", d.map((r) => r.f1_churn), W.rose)] },
+          options: { responsive: true, maintainAspectRatio: false,
+                     scales: { x: sumbu("Jumlah pohon (n_estimators)"), y: sumbu("Skor") } }
+        });
+      },
+      b() {
+        const d = DATA.scenario_b;
+        new Chart(document.getElementById("chart-b"), {
+          type: "line",
+          data: { labels: d.map((r) => r.max_depth),
+                  datasets: [garis("Akurasi Training", d.map((r) => r.acc_train), W.indigo),
+                             garis("Akurasi Testing", d.map((r) => r.acc_test), W.teal)] },
+          options: { responsive: true, maintainAspectRatio: false,
+                     scales: { x: sumbu("Kedalaman pohon (max_depth)"), y: sumbu("Akurasi") } }
+        });
+      },
+      fi() {
+        const d = DATA.importance_top10;
+        new Chart(document.getElementById("chart-fi"), {
+          type: "bar",
+          data: { labels: d.map((r) => r.Feature.replace(/_/g, " ")),
+                  datasets: [{ label: "Importance", data: d.map((r) => r.Importance),
+                               backgroundColor: W.teal, borderRadius: 8 }] },
+          options: { indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                     plugins: { legend: { display: false } },
+                     scales: { x: sumbu("Tingkat kepentingan") } }
+        });
+      },
+      ev() {
+        new Chart(document.getElementById("chart-im"), {
+          type: "doughnut",
+          data: { labels: ["Aktif", "Churn"],
+                  datasets: [{ data: [DATA.imbalance.aktif, DATA.imbalance.churn],
+                               backgroundColor: [W.indigo, W.rose], borderWidth: 0 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: "65%",
+                     plugins: { legend: { position: "right" } } }
+        });
+      }
+    };
+
+    // tab, grafik dibuat saat tab pertama kali dibuka
+    const dibuat = {};
+    function buka(kunci) {
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === kunci));
+      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === "tab-" + kunci));
+      if (!dibuat[kunci]) { pembuat[kunci](); dibuat[kunci] = true; }
+    }
+    document.querySelectorAll(".tab-btn").forEach((b) => b.addEventListener("click", () => buka(b.dataset.tab)));
+    buka("a");
+  </script>
+</body>
+</html>
